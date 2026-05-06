@@ -84,40 +84,46 @@ fi
 
 # ---------- Create Snapshot ----------
 NOW=$(date '+%Y-%m-%d %H:%M:%S')
-DAY=$(date '+%Y-%m-%d')
+TIMESTAMP=$(date '+%Y-%m-%d_%H%M%S')
 WEEK=$(date '+%Y-W%V')
 MONTH=$(date '+%Y-%m')
 DOW=$(date '+%u')   # 1=Mon ... 7=Sun
 DOM=$(date '+%d')   # day of month
 
-# Always create a daily snapshot
-SNAP_NAME="daily-${DAY}"
-log "Creating daily snapshot '$SNAP_NAME' for VM $VMID..."
-if $DRY_RUN; then
-  log "DRY-RUN: would create snapshot '$SNAP_NAME'"
-else
-  qm snapshot "$VMID" "$SNAP_NAME" --description "Daily snapshot $NOW"
-fi
+snapshot_exists() {
+  local name="$1"
+  qm listsnapshot "$VMID" | awk '{print $2}' | grep -qx "$name"
+}
 
-# Create weekly snapshot on Sunday (DOW=7)
-if [[ "$DOW" == "7" ]]; then
-  SNAP_NAME_W="weekly-${WEEK}"
-  log "Creating weekly snapshot '$SNAP_NAME_W' for VM $VMID..."
+create_snapshot() {
+  local name="$1"
+  local desc="$2"
   if $DRY_RUN; then
-    log "DRY-RUN: would create snapshot '$SNAP_NAME_W'"
+    log "DRY-RUN: would create snapshot '$name'"
   else
-    qm snapshot "$VMID" "$SNAP_NAME_W" --description "Weekly snapshot $NOW"
+    log "Creating snapshot '$name' for VM $VMID..."
+    qm snapshot "$VMID" "$name" --description "$desc"
+  fi
+}
+
+# Always create a daily snapshot -- timestamp in name allows multiple per day
+create_snapshot "daily-${TIMESTAMP}" "Daily snapshot $NOW"
+
+# Create weekly snapshot on Sunday (DOW=7), skip if one already exists for this week
+if [[ "$DOW" == "7" ]]; then
+  if snapshot_exists "weekly-${WEEK}"; then
+    log "Weekly snapshot for $WEEK already exists, skipping."
+  else
+    create_snapshot "weekly-${WEEK}" "Weekly snapshot $NOW"
   fi
 fi
 
-# Create monthly snapshot on 1st of month
+# Create monthly snapshot on 1st of month, skip if one already exists for this month
 if [[ "$DOM" == "01" ]]; then
-  SNAP_NAME_M="monthly-${MONTH}"
-  log "Creating monthly snapshot '$SNAP_NAME_M' for VM $VMID..."
-  if $DRY_RUN; then
-    log "DRY-RUN: would create snapshot '$SNAP_NAME_M'"
+  if snapshot_exists "monthly-${MONTH}"; then
+    log "Monthly snapshot for $MONTH already exists, skipping."
   else
-    qm snapshot "$VMID" "$SNAP_NAME_M" --description "Monthly snapshot $NOW"
+    create_snapshot "monthly-${MONTH}" "Monthly snapshot $NOW"
   fi
 fi
 
