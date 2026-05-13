@@ -6,8 +6,8 @@
 set -euo pipefail
 
 # ---------- Defaults ----------
-KEEP_DAILY=7
-KEEP_WEEKLY=4
+KEEP_DAILY=6
+KEEP_WEEKLY=3
 KEEP_MONTHLY=3
 VMID=""
 DRY_RUN=false
