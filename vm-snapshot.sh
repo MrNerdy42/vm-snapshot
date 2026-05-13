@@ -100,31 +100,24 @@ create_snapshot() {
   local desc="$2"
   if $DRY_RUN; then
     log "DRY-RUN: would create snapshot '$name'"
+  elif snapshot_exists $name; then
+    log "Snapshot '$name' for VM $VMID already exists, skipping."
   else
     log "Creating snapshot '$name' for VM $VMID..."
     qm snapshot "$VMID" "$name" --description "$desc"
   fi
 }
 
-# Always create a daily snapshot -- timestamp in name allows multiple per day
-create_snapshot "daily-${TIMESTAMP}" "Daily snapshot $NOW"
 
-# Create weekly snapshot on Sunday (DOW=7), skip if one already exists for this week
+# Create weekly snapshot on Sunday (DOW=7)
 if [[ "$DOW" == "7" ]]; then
-  if snapshot_exists "weekly-${WEEK}"; then
-    log "Weekly snapshot for $WEEK already exists, skipping."
-  else
     create_snapshot "weekly-${WEEK}" "Weekly snapshot $NOW"
-  fi
-fi
-
-# Create monthly snapshot on 1st of month, skip if one already exists for this month
-if [[ "$DOM" == "01" ]]; then
-  if snapshot_exists "monthly-${MONTH}"; then
-    log "Monthly snapshot for $MONTH already exists, skipping."
-  else
+# Create monthly snapshot on 1st of month
+elif [[ "$DOM" == "01" ]]; then
     create_snapshot "monthly-${MONTH}" "Monthly snapshot $NOW"
-  fi
+# If it's not the start of a week or month, create a regular, daily snapshot.
+else
+  create_snapshot "daily-${TIMESTAMP}" "Daily snapshot $NOW"
 fi
 
 # ---------- Prune Snapshots ----------
