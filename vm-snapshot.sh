@@ -111,10 +111,10 @@ create_snapshot() {
 
 # Create weekly snapshot on Sunday (DOW=7)
 if [[ "$DOW" == "7" ]]; then
-    create_snapshot "weekly-${WEEK}" "Weekly snapshot $NOW"
+  create_snapshot "weekly-${WEEK}" "Weekly snapshot $NOW"
 # Create monthly snapshot on 1st of month
 elif [[ "$DOM" == "01" ]]; then
-    create_snapshot "monthly-${MONTH}" "Monthly snapshot $NOW"
+  create_snapshot "monthly-${MONTH}" "Monthly snapshot $NOW"
 # If it's not the start of a week or month, create a regular, daily snapshot.
 else
   create_snapshot "daily-${TIMESTAMP}" "Daily snapshot $NOW"
