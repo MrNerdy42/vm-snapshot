@@ -5,6 +5,8 @@
 
 set -euo pipefail
 
+PATH=/usr/sbin:$PATH
+
 # ---------- Defaults ----------
 KEEP_DAILY=6
 KEEP_WEEKLY=3
